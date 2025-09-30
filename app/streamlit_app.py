@@ -11,7 +11,7 @@ import yfinance as yf
 
 from src.preprocessing import preprocess_data
 from src.models import compare_models_on_series
-from src.visualization import plot_model_comparisons
+from src.visualisation import plot_model_comparisons
 from src.evaluation import compare_models
 
 

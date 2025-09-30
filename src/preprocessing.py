@@ -9,7 +9,7 @@ def preprocess_data(df):
     return df
 
 if __name__ == "__main__":
-    raw = pd.read_csv("../data/raw_data.csv")
+    raw = pd.read_csv("data/raw_data.csv")
     clean = preprocess_data(raw)
-    clean.to_csv("../data/cleaned_data.csv")
+    clean.to_csv("data/cleaned_data.csv")
     print("✅ Data cleaned and saved to data/cleaned_data.csv")

@@ -8,5 +8,5 @@ def fetch_stock_data(ticker="AAPL", start="2015-01-01", end="2025-01-01"):
 
 if __name__ == "__main__":
     df = fetch_stock_data("AAPL")
-    df.to_csv("../data/raw_data.csv", index=False)
+    df.to_csv("data/raw_data.csv", index=False)
     print("✅ Data saved to data/raw_data.csv")

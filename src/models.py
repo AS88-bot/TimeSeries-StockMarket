@@ -38,15 +38,28 @@ except Exception:
     from fbprophet import Prophet  # type: ignore
 
 # LSTM
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-import tensorflow as tf
+try:
+    import tensorflow as tf  # type: ignore
+    from tensorflow.keras.models import Sequential  # type: ignore
+    from tensorflow.keras.layers import LSTM, Dense, Dropout  # type: ignore
+    from tensorflow.keras.callbacks import EarlyStopping  # type: ignore
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    print("Warning: TensorFlow not available. LSTM functionality will be disabled.")
+    # Create dummy classes to prevent import errors
+    class Sequential: pass
+    class LSTM: pass
+    class Dense: pass
+    class Dropout: pass
+    class EarlyStopping: pass
+    tf = None
 
 # reproducibility
 SEED = 42
 np.random.seed(SEED)
-tf.random.set_seed(SEED)
+if TENSORFLOW_AVAILABLE and tf is not None:
+    tf.random.set_seed(SEED)
 
 
 # -------------------------
@@ -98,7 +111,7 @@ def arima_forecast(train_series, steps=30, order=(5, 1, 0), return_model=False):
     model = ARIMA(train_series, order=order)
     model_fit = model.fit()
     fc = model_fit.forecast(steps=steps)
-    fc.index = pd.date_range(start=train_series.index[-1] + pd.Timedelta(1, unit='D'),
+    fc.index = pd.date_range(start=pd.Timestamp(train_series.index[-1]) + pd.Timedelta(1, unit='D'),
                              periods=steps, freq=pd.infer_freq(train_series.index) or 'D')
     if return_model:
         return fc, model_fit
@@ -122,7 +135,7 @@ def sarima_forecast(train_series, steps=30, order=(1, 1, 1), seasonal_order=(1, 
     fc = model_fit.get_forecast(steps=steps)
     pred = fc.predicted_mean
     freq = pd.infer_freq(train_series.index) or 'D'
-    pred.index = pd.date_range(start=train_series.index[-1] + pd.Timedelta(1, unit='D'),
+    pred.index = pd.date_range(start=pd.Timestamp(train_series.index[-1]) + pd.Timedelta(1, unit='D'),
                                periods=steps, freq=freq)
     if return_model:
         return pred, model_fit
@@ -192,6 +205,8 @@ def lstm_forecast(series, lookback=60, epochs=20, batch_size=32, units=50, test_
       - predictions_series: pd.Series indexed by test dates
     Note: This function uses iterative forecasting (predict one step, append, predict next).
     """
+    if not TENSORFLOW_AVAILABLE:
+        raise ImportError("TensorFlow is not available. Please install tensorflow to use LSTM functionality.")
     # Prepare values
     if isinstance(series, pd.DataFrame):
         values = series['Close'].values.reshape(-1, 1)
@@ -320,7 +335,7 @@ if __name__ == "__main__":
     print("Running models.py example...")
 
     # path expected relative to src/
-    path = os.path.join("..", "data", "cleaned_data.csv")
+    path = os.path.join("data", "cleaned_data.csv")
     if not os.path.exists(path):
         raise FileNotFoundError(f"Expected dataset at {path}. Please run the data_loader + preprocessing scripts first.")
 
